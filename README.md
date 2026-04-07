@@ -1,33 +1,43 @@
-# lifeos-server
+# LifeOS
 
-A personal data platform for LifeOS — a system for capturing, storing, and querying all aspects of your life: health, habits, tasks, notes, finances, and more.
+A personal operating system for your life.
 
-## Overview
+LifeOS is a collection of tools, apps, and data systems designed to help you run your life with clarity and intention. It is organized around six departments — the core domains that make up a well-functioning human life.
 
-`lifeos-server` is the backend data layer of LifeOS. It exposes APIs for ingesting and retrieving structured life data from various sources (wearables, apps, manual input) and provides a unified interface for dashboards, automations, and personal analytics.
+## The Six Departments
 
-## Goals
+| Department | What it covers |
+|---|---|
+| **Time** | Calendar, scheduling, deep work, routines |
+| **Mind** | Thoughts, ideas, journaling, mental clarity |
+| **Body** | Sleep, fitness, nutrition, energy |
+| **Money** | Income, expenses, budgets, net worth |
+| **Relationships** | People, commitments, communication |
+| **Environment** | Space, tools, systems, digital setup |
 
-- Centralize personal data from disparate sources into a single queryable store
-- Provide a clean API for LifeOS clients (mobile, web, CLI)
-- Support real-time and historical queries across life domains
-- Be self-hostable, privacy-first, and extensible
+## Applications
 
-## Domains
+| App | Department | Status |
+|---|---|---|
+| [nightly-dump-app](./nightly-dump-app) | Mind | In Progress |
+| weekly-review-app | Time + Mind | Planned |
+| insights-app | All | Planned |
 
-- **Health** — sleep, activity, vitals, nutrition
-- **Tasks** — todos, projects, deadlines
-- **Habits** — streaks, check-ins, routines
-- **Notes** — journal entries, quick captures
-- **Finances** — transactions, budgets, net worth
+### nightly-dump-app
+A CLI tool for a nightly brain dump before sleep. Captures raw thoughts and saves them as timestamped text files. Simple, fast, frictionless.
 
-## Tech Stack
+### weekly-review-app
+A guided weekly review CLI that walks you through each department, surfaces your nightly dumps, and helps you plan the week ahead.
 
-> To be determined as the project evolves.
+### insights-app
+An analytics layer across all LifeOS data — habits, energy patterns, spending trends, relationship touchpoints — surfaced as a personal dashboard.
 
-## Getting Started
+## Philosophy
 
-Documentation and setup instructions will be added as the project progresses.
+- **Self-hosted** — your data stays on your machine
+- **Plain text first** — no lock-in, no proprietary formats
+- **Composable** — each app works standalone, better together
+- **Low friction** — tools you'll actually use daily
 
 ## License
 
