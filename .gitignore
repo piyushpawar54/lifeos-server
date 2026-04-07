@@ -1,0 +1,6 @@
+# Go binaries
+nightly-dump-app/nightly-dump-app
+**/dumps/
+
+# macOS
+.DS_Store

@@ -2,39 +2,87 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 )
 
-type DumpEntry struct {
-	Timestamp time.Time
-	Content   string
-}
-
 func main() {
-	fmt.Println("=== LifeOS Nightly Dump ===")
-	fmt.Println("Brain dump everything on your mind. Press Enter twice to finish.")
-	fmt.Println()
+	install := flag.Bool("install", false, "Install the 10 PM daily reminder on macOS")
+	uninstall := flag.Bool("uninstall", false, "Remove the 10 PM daily reminder")
+	flag.Parse()
 
-	entry := collectDump()
-
-	if strings.TrimSpace(entry.Content) == "" {
-		fmt.Println("Nothing captured. Goodnight.")
+	if *install {
+		if err := InstallScheduler(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 
-	if err := saveDump(entry); err != nil {
+	if *uninstall {
+		if err := UninstallScheduler(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	runDump()
+}
+
+func runDump() {
+	now := time.Now()
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Println("=== LifeOS Nightly Dump ===")
+	fmt.Printf("%s\n\n", now.Format("Monday, January 2 2006 — 15:04"))
+	fmt.Println("Work through each department. Press Enter twice to move on.")
+	fmt.Println()
+
+	var entries []DepartmentEntry
+
+	questions := map[Department]string{
+		DeptTime:          "Time — Did today go as planned? Where did your time go? What must happen tomorrow?",
+		DeptMind:          "Mind — What's taking up mental space? Open loops, anxieties, ideas you don't want to lose?",
+		DeptBody:          "Body — How was your energy today? Sleep, movement, food — anything to note?",
+		DeptMoney:         "Money — Any spending or financial decisions today? Anything you're sitting on?",
+		DeptRelationships: "Relationships — Who did you connect with? Anyone you've been meaning to reach out to?",
+		DeptEnvironment:   "Environment — How did your space feel? Anything to fix, clear, or organise?",
+	}
+
+	for _, dept := range Departments {
+		fmt.Printf("── %s\n", questions[dept])
+		response := collectBlock(scanner)
+		entries = append(entries, DepartmentEntry{
+			Department: dept,
+			Response:   response,
+		})
+		fmt.Println()
+	}
+
+	fmt.Println("── Anything else on your mind?")
+	freeDump := collectBlock(scanner)
+
+	dump := NightlyDump{
+		Timestamp:   now,
+		Date:        now.Format("2006-01-02"),
+		Departments: entries,
+		FreeDump:    freeDump,
+	}
+
+	if err := saveDumpJSON(dump); err != nil {
 		fmt.Fprintf(os.Stderr, "Error saving dump: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("\nDump saved at %s\n", entry.Timestamp.Format("2006-01-02 15:04"))
+	fmt.Printf("\nSaved at %s. Goodnight.\n", now.Format("15:04"))
 }
 
-func collectDump() DumpEntry {
-	scanner := bufio.NewScanner(os.Stdin)
+// collectBlock reads lines until two consecutive empty lines are entered.
+func collectBlock(scanner *bufio.Scanner) string {
 	var lines []string
 	emptyCount := 0
 
@@ -51,26 +99,10 @@ func collectDump() DumpEntry {
 		lines = append(lines, line)
 	}
 
-	return DumpEntry{
-		Timestamp: time.Now(),
-		Content:   strings.Join(lines, "\n"),
-	}
-}
-
-func saveDump(entry DumpEntry) error {
-	dir := "dumps"
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return err
+	// Trim trailing single blank line that accumulates before the double-enter.
+	for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+		lines = lines[:len(lines)-1]
 	}
 
-	filename := fmt.Sprintf("%s/dump_%s.txt", dir, entry.Timestamp.Format("2006-01-02_15-04-05"))
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	fmt.Fprintf(f, "Date: %s\n\n", entry.Timestamp.Format("Monday, January 2 2006 — 15:04"))
-	fmt.Fprintf(f, "%s\n", entry.Content)
-	return nil
+	return strings.Join(lines, "\n")
 }
